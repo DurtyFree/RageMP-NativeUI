@@ -601,6 +601,15 @@ var ChangeDirection;
 var ChangeDirection$1 = ChangeDirection;
 
 class Color {
+    static Empty = new Color(0, 0, 0, 0);
+    static Transparent = new Color(0, 0, 0, 0);
+    static Black = new Color(0, 0, 0, 255);
+    static White = new Color(255, 255, 255, 255);
+    static WhiteSmoke = new Color(245, 245, 245, 255);
+    R;
+    G;
+    B;
+    A;
     constructor(r, g, b, a = 255) {
         this.R = r;
         this.G = g;
@@ -608,13 +617,10 @@ class Color {
         this.A = a;
     }
 }
-Color.Empty = new Color(0, 0, 0, 0);
-Color.Transparent = new Color(0, 0, 0, 0);
-Color.Black = new Color(0, 0, 0, 255);
-Color.White = new Color(255, 255, 255, 255);
-Color.WhiteSmoke = new Color(245, 245, 245, 255);
 
 class Size {
+    Width;
+    Height;
     constructor(w = 0, h = 0) {
         this.Width = w;
         this.Height = h;
@@ -622,9 +628,9 @@ class Size {
 }
 
 class Point {
+    X = 0;
+    Y = 0;
     constructor(x, y) {
-        this.X = 0;
-        this.Y = 0;
         this.X = x;
         this.Y = y;
     }
@@ -648,12 +654,19 @@ class Point {
 }
 
 class IElement {
+    Enabled;
     constructor() {
         this.Enabled = true;
     }
 }
 
 class Text extends IElement {
+    Caption;
+    Pos;
+    Scale;
+    Color;
+    Font;
+    Centered;
     constructor(caption, pos, scale, color, font, centered) {
         super();
         this.Caption = caption;
@@ -702,6 +715,8 @@ class Text extends IElement {
 
 const gameScreen = game__default.getActualScreenResolution(0, 0);
 class Screen {
+    static Width = gameScreen[1];
+    static Height = gameScreen[2];
     static get ResolutionMaintainRatio() {
         const ratio = Screen.Width / Screen.Height;
         const width = 1080.0 * ratio;
@@ -750,10 +765,15 @@ class Screen {
         return lineCount;
     }
 }
-Screen.Width = gameScreen[1];
-Screen.Height = gameScreen[2];
 
 class Sprite {
+    TextureName;
+    Pos;
+    Size;
+    Heading;
+    Color;
+    Visible;
+    _textureDict;
     constructor(textureDict, textureName, pos, size, heading = 0, color = new Color(255, 255, 255)) {
         this.TextureDict = textureDict;
         this.TextureName = textureName;
@@ -814,6 +834,9 @@ class Sprite {
 }
 
 class Rectangle extends IElement {
+    Pos;
+    Size;
+    Color;
     constructor(pos, size, color) {
         super();
         this.Enabled = true;
@@ -863,18 +886,20 @@ class ResRectangle extends Rectangle {
 }
 
 class ResText extends Text {
-    constructor(caption, pos, scale, color, font, centered) {
-        super(caption, pos, scale, color || new Color(255, 255, 255), font || 0, false);
-        this.TextAlignment = Alignment$1.Left;
-        this.Wrap = 0;
-        if (centered)
-            this.TextAlignment = centered;
-    }
+    TextAlignment = Alignment$1.Left;
+    DropShadow;
+    Outline;
+    Wrap = 0;
     get WordWrap() {
         return new Size(this.Wrap, 0);
     }
     set WordWrap(value) {
         this.Wrap = value.Width;
+    }
+    constructor(caption, pos, scale, color, font, centered) {
+        super(caption, pos, scale, color || new Color(255, 255, 255), font || 0, false);
+        if (centered)
+            this.TextAlignment = centered;
     }
     Draw(arg1, pos, scale, color, font, arg2, dropShadow, outline, wordWrap) {
         let caption = arg1;
@@ -963,25 +988,29 @@ function UUIDV4() {
 }
 
 class UIMenuItem {
-    constructor(text, description = "", data = null) {
-        this.Id = UUIDV4();
-        this.BackColor = UIMenuItem.DefaultBackColor;
-        this.HighlightedBackColor = UIMenuItem.DefaultHighlightedBackColor;
-        this.ForeColor = UIMenuItem.DefaultForeColor;
-        this.HighlightedForeColor = UIMenuItem.DefaultHighlightedForeColor;
-        this.RightLabel = "";
-        this.LeftBadge = BadgeStyle$1.None;
-        this.RightBadge = BadgeStyle$1.None;
-        this.Enabled = true;
-        this.Data = data;
-        this._rectangle = new ResRectangle(new Point(0, 0), new Size(431, 38), new Color(150, 0, 0, 0));
-        this._text = new ResText(text, new Point(8, 0), 0.33, Color.WhiteSmoke, Font$1.ChaletLondon, Alignment$1.Left);
-        this.Description = description;
-        this._selectedSprite = new Sprite("commonmenu", "gradient_nav", new Point(0, 0), new Size(431, 38));
-        this._badgeLeft = new Sprite("commonmenu", "", new Point(0, 0), new Size(40, 40));
-        this._badgeRight = new Sprite("commonmenu", "", new Point(0, 0), new Size(40, 40));
-        this._labelText = new ResText("", new Point(0, 0), 0.35, Color.White, 0, Alignment$1.Right);
-    }
+    Id = UUIDV4();
+    static DefaultBackColor = Color.Empty;
+    static DefaultHighlightedBackColor = Color.White;
+    static DefaultForeColor = Color.WhiteSmoke;
+    static DefaultHighlightedForeColor = Color.Black;
+    _event;
+    _rectangle;
+    _text;
+    _description;
+    _selectedSprite;
+    _badgeLeft;
+    _badgeRight;
+    _labelText;
+    BackColor = UIMenuItem.DefaultBackColor;
+    HighlightedBackColor = UIMenuItem.DefaultHighlightedBackColor;
+    ForeColor = UIMenuItem.DefaultForeColor;
+    HighlightedForeColor = UIMenuItem.DefaultHighlightedForeColor;
+    Enabled;
+    Selected;
+    Hovered;
+    Data;
+    Offset;
+    Parent;
     get Text() {
         return this._text.Caption;
     }
@@ -996,6 +1025,20 @@ class UIMenuItem {
         if (this != undefined && this.Parent != undefined) {
             this.Parent.UpdateDescriptionCaption();
         }
+    }
+    RightLabel = "";
+    LeftBadge = BadgeStyle$1.None;
+    RightBadge = BadgeStyle$1.None;
+    constructor(text, description = "", data = null) {
+        this.Enabled = true;
+        this.Data = data;
+        this._rectangle = new ResRectangle(new Point(0, 0), new Size(431, 38), new Color(150, 0, 0, 0));
+        this._text = new ResText(text, new Point(8, 0), 0.33, Color.WhiteSmoke, Font$1.ChaletLondon, Alignment$1.Left);
+        this.Description = description;
+        this._selectedSprite = new Sprite("commonmenu", "gradient_nav", new Point(0, 0), new Size(431, 38));
+        this._badgeLeft = new Sprite("commonmenu", "", new Point(0, 0), new Size(40, 40));
+        this._badgeRight = new Sprite("commonmenu", "", new Point(0, 0), new Size(40, 40));
+        this._labelText = new ResText("", new Point(0, 0), 0.35, Color.White, 0, Alignment$1.Right);
     }
     SetVerticalPosition(y) {
         this._rectangle.Pos = new Point(this.Offset.X, y + 144 + this.Offset.Y);
@@ -1184,15 +1227,12 @@ class UIMenuItem {
         }
     }
 }
-UIMenuItem.DefaultBackColor = Color.Empty;
-UIMenuItem.DefaultHighlightedBackColor = Color.White;
-UIMenuItem.DefaultForeColor = Color.WhiteSmoke;
-UIMenuItem.DefaultHighlightedForeColor = Color.Black;
 
 class UIMenuCheckboxItem extends UIMenuItem {
+    _checkedSprite;
+    Checked = false;
     constructor(text, check = false, description = "") {
         super(text, description);
-        this.Checked = false;
         const y = 0;
         this._checkedSprite = new Sprite("commonmenu", "shop_box_blank", new Point(410, y + 95), new Size(50, 50));
         this.Checked = check;
@@ -1231,14 +1271,17 @@ class UIMenuCheckboxItem extends UIMenuItem {
 }
 
 class ListItem {
+    Id = UUIDV4();
+    DisplayText;
+    Data;
     constructor(text = "", data = null) {
-        this.Id = UUIDV4();
         this.DisplayText = text;
         this.Data = data;
     }
 }
 
 class ItemsCollection {
+    items;
     constructor(items) {
         if (items.length === 0)
             throw new Error("ItemsCollection cannot be empty");
@@ -1265,20 +1308,13 @@ class ItemsCollection {
 }
 
 class UIMenuListItem extends UIMenuItem {
-    constructor(text, description = "", collection = new ItemsCollection(([])), startIndex = 0, data = null) {
-        super(text, description, data);
-        this.ScrollingEnabled = true;
-        this.HoldTimeBeforeScroll = 200;
-        this._currentOffset = 0;
-        this._itemsCollection = [];
-        this._index = 0;
-        let y = 0;
-        this.Collection = collection.getListItems();
-        this.Index = startIndex;
-        this._arrowLeft = new Sprite("commonmenu", "arrowleft", new Point(110, 105 + y), new Size(30, 30));
-        this._arrowRight = new Sprite("commonmenu", "arrowright", new Point(280, 105 + y), new Size(30, 30));
-        this._itemText = new ResText("", new Point(290, y + 104), 0.35, Color.White, Font$1.ChaletLondon, Alignment$1.Right);
-    }
+    ScrollingEnabled = true;
+    HoldTimeBeforeScroll = 200;
+    _itemText;
+    _arrowLeft;
+    _arrowRight;
+    _currentOffset = 0;
+    _itemsCollection = [];
     get Collection() {
         return this._itemsCollection;
     }
@@ -1304,6 +1340,7 @@ class UIMenuListItem extends UIMenuItem {
                 ? this.SelectedItem.DisplayText
                 : this.SelectedItem.Data;
     }
+    _index = 0;
     get Index() {
         if (this.Collection == null)
             return -1;
@@ -1321,6 +1358,15 @@ class UIMenuListItem extends UIMenuItem {
             ? this.Collection[this.Index].DisplayText
             : " ";
         this._currentOffset = Screen.GetTextWidth(caption, this._itemText && this._itemText.Font ? this._itemText.Font : 0, 0.35);
+    }
+    constructor(text, description = "", collection = new ItemsCollection(([])), startIndex = 0, data = null) {
+        super(text, description, data);
+        let y = 0;
+        this.Collection = collection.getListItems();
+        this.Index = startIndex;
+        this._arrowLeft = new Sprite("commonmenu", "arrowleft", new Point(110, 105 + y), new Size(30, 30));
+        this._arrowRight = new Sprite("commonmenu", "arrowright", new Point(280, 105 + y), new Size(30, 30));
+        this._itemText = new ResText("", new Point(290, y + 104), 0.35, Color.White, Font$1.ChaletLondon, Alignment$1.Right);
     }
     setCollection(collection) {
         this.Collection = collection.getListItems();
@@ -1391,23 +1437,17 @@ const fixFloat = (n) => {
 };
 
 class UIMenuAutoListItem extends UIMenuItem {
-    constructor(text, description = "", lowerThreshold = 0, upperThreshold = 10, startValue = 0, data = null) {
-        super(text, description, data);
-        this._currentOffset = 0;
-        this._leftMoveThreshold = 1;
-        this._rightMoveThreshold = 1;
-        this._lowerThreshold = 0;
-        this._upperThreshold = 10;
-        this._preCaptionText = '';
-        this._postCaptionText = '';
-        let y = 0;
-        this.LowerThreshold = lowerThreshold;
-        this.UpperThreshold = lowerThreshold > upperThreshold ? lowerThreshold : upperThreshold;
-        this.SelectedValue = (startValue < lowerThreshold || startValue > upperThreshold) ? lowerThreshold : startValue;
-        this._arrowLeft = new Sprite("commonmenu", "arrowleft", new Point(110, 105 + y), new Size(30, 30));
-        this._arrowRight = new Sprite("commonmenu", "arrowright", new Point(280, 105 + y), new Size(30, 30));
-        this._itemText = new ResText("", new Point(290, y + 104), 0.35, Color.White, Font$1.ChaletLondon, Alignment$1.Right);
-    }
+    _itemText;
+    _arrowLeft;
+    _arrowRight;
+    _currentOffset = 0;
+    _leftMoveThreshold = 1;
+    _rightMoveThreshold = 1;
+    _lowerThreshold = 0;
+    _upperThreshold = 10;
+    _preCaptionText = '';
+    _postCaptionText = '';
+    _selectedValue;
     get PreCaptionText() {
         return this._preCaptionText;
     }
@@ -1477,6 +1517,16 @@ class UIMenuAutoListItem extends UIMenuItem {
         this._selectedValue = fixFloat(value);
         this._currentOffset = Screen.GetTextWidth(this.PreCaptionText + this._selectedValue.toString() + this.PostCaptionText, this._itemText && this._itemText.Font ? this._itemText.Font : 0, this._itemText && this._itemText.Scale ? this._itemText.Scale : 0.35);
     }
+    constructor(text, description = "", lowerThreshold = 0, upperThreshold = 10, startValue = 0, data = null) {
+        super(text, description, data);
+        let y = 0;
+        this.LowerThreshold = lowerThreshold;
+        this.UpperThreshold = lowerThreshold > upperThreshold ? lowerThreshold : upperThreshold;
+        this.SelectedValue = (startValue < lowerThreshold || startValue > upperThreshold) ? lowerThreshold : startValue;
+        this._arrowLeft = new Sprite("commonmenu", "arrowleft", new Point(110, 105 + y), new Size(30, 30));
+        this._arrowRight = new Sprite("commonmenu", "arrowright", new Point(280, 105 + y), new Size(30, 30));
+        this._itemText = new ResText("", new Point(290, y + 104), 0.35, Color.White, Font$1.ChaletLondon, Alignment$1.Right);
+    }
     SetVerticalPosition(y) {
         this._arrowLeft.Pos = new Point(300 + this.Offset.X + this.Parent.WidthOffset, 147 + y + this.Offset.Y);
         this._arrowRight.Pos = new Point(400 + this.Offset.X + this.Parent.WidthOffset, 147 + y + this.Offset.Y);
@@ -1522,6 +1572,19 @@ class UIMenuAutoListItem extends UIMenuItem {
 }
 
 class UIMenuSliderItem extends UIMenuItem {
+    _arrowLeft;
+    _arrowRight;
+    _rectangleBackground;
+    _rectangleSlider;
+    _rectangleDivider;
+    _items;
+    _index;
+    get Index() {
+        return this._index % this._items.length;
+    }
+    set Index(value) {
+        this._index = 100000000 - (100000000 % this._items.length) + value;
+    }
     constructor(text, items, index, description = "", divider = false, data = null) {
         super(text, description, data);
         const y = 0;
@@ -1537,12 +1600,6 @@ class UIMenuSliderItem extends UIMenuItem {
             this._rectangleDivider = new ResRectangle(new Point(0, 0), new Size(2.5, 20), Color.Transparent);
         }
         this.Index = index;
-    }
-    get Index() {
-        return this._index % this._items.length;
-    }
-    set Index(value) {
-        this._index = 100000000 - (100000000 % this._items.length) + value;
     }
     SetVerticalPosition(y) {
         this._rectangleBackground.Pos = new Point(250 + this.Offset.X + this.Parent.WidthOffset, y + 158.5 + this.Offset.Y);
@@ -1582,6 +1639,7 @@ class UIMenuSliderItem extends UIMenuItem {
 }
 
 class Container extends Rectangle {
+    Items;
     constructor(pos, size, color) {
         super(pos, size, color);
         this.Items = [];
@@ -1615,9 +1673,7 @@ class Common {
 }
 
 class LiteEvent {
-    constructor() {
-        this.handlers = [];
-    }
+    handlers = [];
     on(handler) {
         this.handlers.push(handler);
     }
@@ -1636,14 +1692,18 @@ class LiteEvent {
 }
 
 class InstructionalButton {
+    Text;
+    get ItemBind() { return this._itemBind; }
+    _itemBind = null;
+    _buttonString;
+    _buttonControl;
+    _usingControls;
     constructor(text, control, buttonString = null) {
-        this._itemBind = null;
         this.Text = text;
         this._buttonControl = control;
         this._usingControls = buttonString == null;
         this._buttonString = buttonString;
     }
-    get ItemBind() { return this._itemBind; }
     BindToItem(item) {
         this._itemBind = item;
     }
@@ -1653,8 +1713,9 @@ class InstructionalButton {
 }
 
 class Scaleform {
+    _handle = 0;
+    scaleForm;
     constructor(scaleForm) {
-        this._handle = 0;
         this.scaleForm = scaleForm;
         this._handle = game.requestScaleformMovie(this.scaleForm);
     }
@@ -1727,6 +1788,13 @@ class Scaleform {
 }
 
 class Message {
+    static _messageVisible = false;
+    static _transitionOutTimeout = null;
+    static _transitionOutFinishedTimeout = null;
+    static _delayedTransitionInTimeout = null;
+    static _scaleform = null;
+    static _transitionOutTimeMs = 500;
+    static _transitionOutAnimName = null;
     static Initialize(scaleForm, transitionOutAnimName) {
         this._transitionOutAnimName = transitionOutAnimName;
         this._scaleform = new Scaleform(scaleForm);
@@ -1798,13 +1866,6 @@ class Message {
         }
     }
 }
-Message._messageVisible = false;
-Message._transitionOutTimeout = null;
-Message._transitionOutFinishedTimeout = null;
-Message._delayedTransitionInTimeout = null;
-Message._scaleform = null;
-Message._transitionOutTimeMs = 500;
-Message._transitionOutAnimName = null;
 
 class BigMessage extends Message {
     static Initialize(scaleForm, transitionOutAnimName) {
@@ -1865,25 +1926,14 @@ class MidsizedMessage extends Message {
 MidsizedMessage.Initialize("MIDSIZED_MESSAGE", "SHARD_ANIM_OUT");
 
 class UIMenuDynamicListItem extends UIMenuItem {
-    constructor(text, selectionChangeHandler, description = "", selectedStartValueHandler = null, data = null) {
-        super(text, description, data);
-        this._currentOffset = 0;
-        this._precaptionText = '';
-        this._selectedStartValueHandler = null;
-        this.SelectionChangeHandler = null;
-        if (!this.isVariableFunction(selectionChangeHandler)) {
-            alt.logError(`[UIMenuDynamicListItem] ${text} is not created with a valid selectionChangeHandler, needs to be function. Please see docs.`);
-        }
-        if (!this.isVariableFunction(selectedStartValueHandler)) {
-            alt.logError(`[UIMenuDynamicListItem] ${text} is not created with a valid selectedStartValueHandler, needs to be function. Please see docs.`);
-        }
-        this.SelectionChangeHandler = selectionChangeHandler;
-        this._selectedStartValueHandler = selectedStartValueHandler;
-        let y = 0;
-        this._arrowLeft = new Sprite("commonmenu", "arrowleft", new Point(110, 105 + y), new Size(30, 30));
-        this._arrowRight = new Sprite("commonmenu", "arrowright", new Point(280, 105 + y), new Size(30, 30));
-        this._itemText = new ResText("", new Point(290, y + 104), 0.35, Color.White, Font$1.ChaletLondon, Alignment$1.Right);
-    }
+    _itemText;
+    _arrowLeft;
+    _arrowRight;
+    _currentOffset = 0;
+    _precaptionText = '';
+    _selectedValue;
+    _selectedStartValueHandler = null;
+    SelectionChangeHandler = null;
     SelectionChangeHandlerPromise(item, selectedValue, changeDirection) {
         return new Promise((resolve, reject) => {
             let newSelectedValue = this.SelectionChangeHandler(item, selectedValue, changeDirection);
@@ -1909,6 +1959,21 @@ class UIMenuDynamicListItem extends UIMenuItem {
         if (value == undefined)
             return;
         this._currentOffset = Screen.GetTextWidth(this.PreCaptionText + this._selectedValue, this._itemText && this._itemText.Font ? this._itemText.Font : 0, this._itemText && this._itemText.Scale ? this._itemText.Scale : 0.35);
+    }
+    constructor(text, selectionChangeHandler, description = "", selectedStartValueHandler = null, data = null) {
+        super(text, description, data);
+        if (!this.isVariableFunction(selectionChangeHandler)) {
+            alt.logError(`[UIMenuDynamicListItem] ${text} is not created with a valid selectionChangeHandler, needs to be function. Please see docs.`);
+        }
+        if (!this.isVariableFunction(selectedStartValueHandler)) {
+            alt.logError(`[UIMenuDynamicListItem] ${text} is not created with a valid selectedStartValueHandler, needs to be function. Please see docs.`);
+        }
+        this.SelectionChangeHandler = selectionChangeHandler;
+        this._selectedStartValueHandler = selectedStartValueHandler;
+        let y = 0;
+        this._arrowLeft = new Sprite("commonmenu", "arrowleft", new Point(110, 105 + y), new Size(30, 30));
+        this._arrowRight = new Sprite("commonmenu", "arrowright", new Point(280, 105 + y), new Size(30, 30));
+        this._itemText = new ResText("", new Point(290, y + 104), 0.35, Color.White, Font$1.ChaletLondon, Alignment$1.Right);
     }
     SetVerticalPosition(y) {
         this._arrowLeft.Pos = new Point(300 + this.Offset.X + this.Parent.WidthOffset, 147 + y + this.Offset.Y);
@@ -1967,85 +2032,70 @@ class UIMenuDynamicListItem extends UIMenuItem {
 
 let menuPool = [];
 class NativeUI {
-    constructor(title, subtitle, offset, spriteLibrary, spriteName) {
-        this._visible = true;
-        this._counterPretext = "";
-        this._counterOverride = undefined;
-        this._lastUpDownNavigation = 0;
-        this._lastLeftRightNavigation = 0;
-        this._extraOffset = 0;
-        this._buttonsEnabled = true;
-        this._justOpened = true;
-        this._justOpenedFromPool = false;
-        this._justClosedFromPool = false;
-        this._poolOpening = null;
-        this._safezoneOffset = new Point(0, 0);
-        this._activeItem = 1000;
-        this._maxItemsOnScreen = 9;
-        this._maxItem = this._maxItemsOnScreen;
-        this._mouseEdgeEnabled = true;
-        this._bannerSprite = null;
-        this._bannerRectangle = null;
-        this._recalculateDescriptionNextFrame = 1;
-        this._instructionalButtons = [];
-        this._defaultTitleScale = 1.15;
-        this._maxMenuItems = 1000;
-        this.Id = UUIDV4();
-        this.SelectTextLocalized = alt.getGxtText("HUD_INPUT2");
-        this.BackTextLocalized = alt.getGxtText("HUD_INPUT3");
-        this.WidthOffset = 0;
-        this.ParentMenu = null;
-        this.ParentItem = null;
-        this.MouseControlsEnabled = false;
-        this.CloseableByUser = true;
-        this.AUDIO_LIBRARY = "HUD_FRONTEND_DEFAULT_SOUNDSET";
-        this.AUDIO_UPDOWN = "NAV_UP_DOWN";
-        this.AUDIO_LEFTRIGHT = "NAV_LEFT_RIGHT";
-        this.AUDIO_SELECT = "SELECT";
-        this.AUDIO_BACK = "BACK";
-        this.AUDIO_ERROR = "ERROR";
-        this.MenuItems = [];
-        this.IndexChange = new LiteEvent();
-        this.ListChange = new LiteEvent();
-        this.AutoListChange = new LiteEvent();
-        this.DynamicListChange = new LiteEvent();
-        this.SliderChange = new LiteEvent();
-        this.CheckboxChange = new LiteEvent();
-        this.ItemSelect = new LiteEvent();
-        this.MenuOpen = new LiteEvent();
-        this.MenuClose = new LiteEvent();
-        this.MenuChange = new LiteEvent();
-        if (!(offset instanceof Point))
-            offset = Point.Parse(offset);
-        this._spriteLibrary = spriteLibrary || "commonmenu";
-        this._spriteName = spriteName || "interaction_bgd";
-        this._offset = new Point(offset.X, offset.Y);
-        this.Children = new Map();
-        this._instructionalButtonsScaleform = new Scaleform("instructional_buttons");
-        this.UpdateScaleform();
-        this._mainMenu = new Container(new Point(0, 0), new Size(700, 500), new Color(0, 0, 0, 0));
-        this._bannerSprite = new Sprite(this._spriteLibrary, this._spriteName, new Point(0 + this._offset.X, 0 + this._offset.Y), new Size(431, 107));
-        this._mainMenu.addItem((this._titleResText = new ResText(title, new Point(215 + this._offset.X, 20 + this._offset.Y), this._defaultTitleScale, new Color(255, 255, 255), 1, Alignment$1.Centered)));
-        if (subtitle !== "") {
-            this._mainMenu.addItem(new ResRectangle(new Point(0 + this._offset.X, 107 + this._offset.Y), new Size(431, 37), new Color(0, 0, 0, 255)));
-            this._mainMenu.addItem((this._subtitleResText = new ResText(subtitle, new Point(8 + this._offset.X, 110 + this._offset.Y), 0.35, new Color(255, 255, 255), 0, Alignment$1.Left)));
-            if (subtitle.startsWith("~")) {
-                this._counterPretext = subtitle.substr(0, 3);
-            }
-            this._counterText = new ResText("", new Point(425 + this._offset.X, 110 + this._offset.Y), 0.35, new Color(255, 255, 255), 0, Alignment$1.Right);
-            this._extraOffset += 37;
-        }
-        this._upAndDownSprite = new Sprite("commonmenu", "shop_arrows_upanddown", new Point(190 + this._offset.X, 147 + 37 * (this._maxItemsOnScreen + 1) + this._offset.Y - 37 + this._extraOffset), new Size(50, 50));
-        this._extraRectangleUp = new ResRectangle(new Point(0 + this._offset.X, 144 + 38 * (this._maxItemsOnScreen + 1) + this._offset.Y - 37 + this._extraOffset), new Size(431, 18), new Color(0, 0, 0, 200));
-        this._extraRectangleDown = new ResRectangle(new Point(0 + this._offset.X, 144 + 18 + 38 * (this._maxItemsOnScreen + 1) + this._offset.Y - 37 + this._extraOffset), new Size(431, 18), new Color(0, 0, 0, 200));
-        this._descriptionBar = new ResRectangle(new Point(this._offset.X, 123), new Size(431, 4), Color.Black);
-        this._descriptionRectangle = new Sprite("commonmenu", "gradient_bgd", new Point(this._offset.X, 127), new Size(431, 30));
-        this._descriptionText = new ResText("", new Point(this._offset.X + 5, 125), 0.35, new Color(255, 255, 255, 255), Font$1.ChaletLondon, Alignment$1.Left);
-        this._descriptionText.Wrap = 400;
-        this._background = new Sprite("commonmenu", "gradient_bgd", new Point(this._offset.X, 144 + this._offset.Y - 37 + this._extraOffset), new Size(290, 25));
-        this._visible = false;
-        alt.everyTick(this.render.bind(this));
-    }
+    _visible = true;
+    _counterPretext = "";
+    _counterOverride = undefined;
+    _spriteLibrary;
+    _spriteName;
+    _offset;
+    _lastUpDownNavigation = 0;
+    _lastLeftRightNavigation = 0;
+    _extraOffset = 0;
+    _buttonsEnabled = true;
+    _justOpened = true;
+    _justOpenedFromPool = false;
+    _justClosedFromPool = false;
+    _poolOpening = null;
+    _safezoneOffset = new Point(0, 0);
+    _activeItem = 1000;
+    _maxItemsOnScreen = 9;
+    _minItem;
+    _maxItem = this._maxItemsOnScreen;
+    _mouseEdgeEnabled = true;
+    _bannerSprite = null;
+    _bannerRectangle = null;
+    _recalculateDescriptionNextFrame = 1;
+    _instructionalButtons = [];
+    _instructionalButtonsScaleform;
+    _defaultTitleScale = 1.15;
+    _maxMenuItems = 1000;
+    _mainMenu;
+    _upAndDownSprite;
+    _titleResText;
+    _subtitleResText;
+    _extraRectangleUp;
+    _extraRectangleDown;
+    _descriptionBar;
+    _descriptionRectangle;
+    _descriptionText;
+    _counterText;
+    _background;
+    Id = UUIDV4();
+    SelectTextLocalized = alt.getGxtText("HUD_INPUT2");
+    BackTextLocalized = alt.getGxtText("HUD_INPUT3");
+    WidthOffset = 0;
+    ParentMenu = null;
+    ParentItem = null;
+    Children;
+    MouseControlsEnabled = false;
+    CloseableByUser = true;
+    AUDIO_LIBRARY = "HUD_FRONTEND_DEFAULT_SOUNDSET";
+    AUDIO_UPDOWN = "NAV_UP_DOWN";
+    AUDIO_LEFTRIGHT = "NAV_LEFT_RIGHT";
+    AUDIO_SELECT = "SELECT";
+    AUDIO_BACK = "BACK";
+    AUDIO_ERROR = "ERROR";
+    MenuItems = [];
+    IndexChange = new LiteEvent();
+    ListChange = new LiteEvent();
+    AutoListChange = new LiteEvent();
+    DynamicListChange = new LiteEvent();
+    SliderChange = new LiteEvent();
+    CheckboxChange = new LiteEvent();
+    ItemSelect = new LiteEvent();
+    MenuOpen = new LiteEvent();
+    MenuClose = new LiteEvent();
+    MenuChange = new LiteEvent();
     GetSpriteBanner() {
         return this._bannerSprite;
     }
@@ -2144,6 +2194,38 @@ class NativeUI {
         }
         this.IndexChange.emit(this.CurrentSelection, this.MenuItems[this._activeItem % this.MenuItems.length]);
         this.UpdateDescriptionCaption();
+    }
+    constructor(title, subtitle, offset, spriteLibrary, spriteName) {
+        if (!(offset instanceof Point))
+            offset = Point.Parse(offset);
+        this._spriteLibrary = spriteLibrary || "commonmenu";
+        this._spriteName = spriteName || "interaction_bgd";
+        this._offset = new Point(offset.X, offset.Y);
+        this.Children = new Map();
+        this._instructionalButtonsScaleform = new Scaleform("instructional_buttons");
+        this.UpdateScaleform();
+        this._mainMenu = new Container(new Point(0, 0), new Size(700, 500), new Color(0, 0, 0, 0));
+        this._bannerSprite = new Sprite(this._spriteLibrary, this._spriteName, new Point(0 + this._offset.X, 0 + this._offset.Y), new Size(431, 107));
+        this._mainMenu.addItem((this._titleResText = new ResText(title, new Point(215 + this._offset.X, 20 + this._offset.Y), this._defaultTitleScale, new Color(255, 255, 255), 1, Alignment$1.Centered)));
+        if (subtitle !== "") {
+            this._mainMenu.addItem(new ResRectangle(new Point(0 + this._offset.X, 107 + this._offset.Y), new Size(431, 37), new Color(0, 0, 0, 255)));
+            this._mainMenu.addItem((this._subtitleResText = new ResText(subtitle, new Point(8 + this._offset.X, 110 + this._offset.Y), 0.35, new Color(255, 255, 255), 0, Alignment$1.Left)));
+            if (subtitle.startsWith("~")) {
+                this._counterPretext = subtitle.substr(0, 3);
+            }
+            this._counterText = new ResText("", new Point(425 + this._offset.X, 110 + this._offset.Y), 0.35, new Color(255, 255, 255), 0, Alignment$1.Right);
+            this._extraOffset += 37;
+        }
+        this._upAndDownSprite = new Sprite("commonmenu", "shop_arrows_upanddown", new Point(190 + this._offset.X, 147 + 37 * (this._maxItemsOnScreen + 1) + this._offset.Y - 37 + this._extraOffset), new Size(50, 50));
+        this._extraRectangleUp = new ResRectangle(new Point(0 + this._offset.X, 144 + 38 * (this._maxItemsOnScreen + 1) + this._offset.Y - 37 + this._extraOffset), new Size(431, 18), new Color(0, 0, 0, 200));
+        this._extraRectangleDown = new ResRectangle(new Point(0 + this._offset.X, 144 + 18 + 38 * (this._maxItemsOnScreen + 1) + this._offset.Y - 37 + this._extraOffset), new Size(431, 18), new Color(0, 0, 0, 200));
+        this._descriptionBar = new ResRectangle(new Point(this._offset.X, 123), new Size(431, 4), Color.Black);
+        this._descriptionRectangle = new Sprite("commonmenu", "gradient_bgd", new Point(this._offset.X, 127), new Size(431, 30));
+        this._descriptionText = new ResText("", new Point(this._offset.X + 5, 125), 0.35, new Color(255, 255, 255, 255), Font$1.ChaletLondon, Alignment$1.Left);
+        this._descriptionText.Wrap = 400;
+        this._background = new Sprite("commonmenu", "gradient_bgd", new Point(this._offset.X, 144 + this._offset.Y - 37 + this._extraOffset), new Size(290, 25));
+        this._visible = false;
+        alt.everyTick(this.render.bind(this));
     }
     DisableInstructionalButtons(disable) {
         this._buttonsEnabled = !disable;
